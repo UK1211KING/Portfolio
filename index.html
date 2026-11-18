@@ -1,0 +1,380 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Utsab Upreti</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: a systems status board. Each section pairs a mono label column with its content;
+   the stack is a table of services with a state pill, the way an ops dashboard lists hosts. */
+:root {
+  --bg: #EBDDBF;
+  --surface: #F2E6CC;
+  --fg: #2B2118;
+  --muted: #66533E;
+  --line: #C6B08A;
+  --accent: #8A3B1E;
+  --st-prod: #5C6A2C;
+  --st-lab: #66533E;
+  --st-learn: #9A5A12;
+  --grain-opacity: .55;
+  --vignette: rgba(92, 58, 20, .28);
+  --font-display: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1D1710; --surface: #261E15; --fg: #EADBC0; --muted: #B8A586; --line: #4A3B29;
+    --accent: #D98B5B; --st-prod: #A9B96A; --st-lab: #B8A586; --st-learn: #E3A44A;
+    --grain-opacity: .22; --vignette: rgba(0, 0, 0, .55);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+--bg: #1D1710; --surface: #261E15; --fg: #EADBC0; --muted: #B8A586; --line: #4A3B29;
+  --accent: #D98B5B; --st-prod: #A9B96A; --st-lab: #B8A586; --st-learn: #E3A44A;
+  --grain-opacity: .22; --vignette: rgba(0, 0, 0, .55);
+  color-scheme: dark;
+}
+
+
+/* Vintage paper: warm tone, fibre grain, age-stained edges, faint foxing spots.
+   Lives on a fixed pseudo-element so it never scrolls or affects layout. */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 40%, transparent 52%, var(--vignette) 100%),
+    radial-gradient(circle at 12% 18%, rgba(140, 90, 30, .10) 0, transparent 9%),
+    radial-gradient(circle at 86% 30%, rgba(140, 90, 30, .08) 0, transparent 7%),
+    radial-gradient(circle at 70% 82%, rgba(140, 90, 30, .10) 0, transparent 10%),
+    radial-gradient(circle at 24% 74%, rgba(140, 90, 30, .07) 0, transparent 8%);
+}
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  opacity: var(--grain-opacity); mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35  0 0 0 0 .25  0 0 0 0 .12  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+:root[data-theme="dark"] body::after { mix-blend-mode: screen; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) body::after { mix-blend-mode: screen; } }
+.portrait img { filter: sepia(.35) contrast(1.03); }
+.top, .scale, section { border-color: var(--line); }
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  position: relative;
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0;
+}
+a { color: var(--accent); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.wrap { max-width: 1040px; margin: 0 auto; }
+
+/* Header */
+.top {
+  display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding-block: 20px; border-bottom: 1px solid var(--line);
+  font-family: var(--font-mono); font-size: 13px; color: var(--muted);
+}
+.top nav { display: flex; gap: 18px; flex-wrap: wrap; }
+.top a { color: var(--muted); text-decoration: none; }
+.top a:hover { color: var(--accent); }
+
+/* Hero */
+.hero { padding-block: 56px 40px; display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px 56px; align-items: center; }
+.hero-copy { min-width: 0; }
+.portrait { margin: 0; justify-self: end; width: 100%; max-width: 320px; }
+.portrait img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; background: var(--surface); outline: 1px solid var(--line); outline-offset: 10px; }
+.eyebrow { font-family: var(--font-mono); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 0 0 12px; }
+h1 {
+  font-family: var(--font-display); font-weight: 700; text-transform: uppercase;
+  font-size: clamp(3.4rem, 11vw, 7.5rem); line-height: .9; letter-spacing: .005em; margin: 0;
+  text-wrap: balance;
+}
+.role { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.5rem, 4vw, 2.2rem); margin: 14px 0 0; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.lede { max-width: 62ch; margin: 24px 0 0; font-size: 1.1rem; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 28px; }
+.mail {
+  display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  font-family: var(--font-mono); font-size: 14px; padding: 10px 14px;
+  background: var(--surface); border: 1px solid var(--line);
+}
+button.copy {
+  font: inherit; font-family: var(--font-mono); font-size: 12px; cursor: pointer;
+  background: var(--accent); color: var(--bg); border: 0; padding: 4px 10px;
+}
+.ghost { font-family: var(--font-mono); font-size: 14px; padding: 10px 14px; border: 1px solid var(--line); text-decoration: none; color: var(--fg); }
+.ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Scale strip */
+.scale { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin-top: 8px; }
+.scale div { padding: 18px 16px 18px 0; }
+.scale b { display: block; font-family: var(--font-display); font-size: 2.4rem; line-height: 1; font-weight: 700; font-variant-numeric: tabular-nums; }
+.scale span { font-family: var(--font-mono); font-size: 12.5px; color: var(--muted); }
+
+/* Sections */
+section { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 16px 40px; padding-block: 48px; border-bottom: 1px solid var(--line); }
+section > h2 { font-family: var(--font-mono); font-weight: 500; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 6px 0 0; }
+section p { margin: 0 0 14px; max-width: 66ch; }
+h3 { font-family: var(--font-display); font-size: 1.7rem; font-weight: 600; line-height: 1.1; margin: 0; text-transform: uppercase; letter-spacing: .02em; }
+.meta { font-family: var(--font-mono); font-size: 13px; color: var(--muted); margin: 6px 0 0; }
+
+/* Stack table */
+.stack { display: grid; gap: 0; }
+.row { display: grid; grid-template-columns: 170px minmax(0, 1fr) auto; gap: 8px 24px; padding: 14px 0; border-top: 1px solid var(--line); align-items: baseline; }
+.row:first-child { border-top: 0; padding-top: 0; }
+.row .area { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+.row .tools { min-width: 0; }
+.row .tools small { display: block; color: var(--muted); font-size: 14px; }
+.pill { font-family: var(--font-mono); font-size: 12px; display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+.pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+.pill.lab { background: none; border: 0; padding: 0; margin: 0; max-width: none; }
+.pill.prod { --c: var(--st-prod); }
+.pill.lab { --c: var(--st-lab); }
+.pill.learn { --c: var(--st-learn); }
+
+/* Experience and lists */
+ul.plain { margin: 16px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; max-width: 70ch; }
+ul.plain li { padding-left: 18px; position: relative; }
+ul.plain li::before { content: ""; position: absolute; left: 0; top: .7em; width: 8px; height: 1px; background: var(--accent); }
+
+.work { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 28px 32px; }
+.work h4 { font-family: var(--font-mono); font-size: 13px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); margin: 0 0 6px; }
+.work p { margin: 0; font-size: 15px; color: var(--fg); }
+
+.lab { background: var(--surface); border: 1px solid var(--line); padding: 20px; margin-top: 18px; max-width: 70ch; }
+.lab p { font-size: 15px; }
+code, .mono { font-family: var(--font-mono); font-size: .92em; }
+
+.certs { display: grid; gap: 0; }
+.cert { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 24px; padding: 14px 0; border-top: 1px solid var(--line); }
+.cert:first-child { border-top: 0; padding-top: 0; }
+.cert b { font-weight: 600; }
+.cert span { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+
+/* Clickable certificates */
+button.cert {
+  width: 100%; text-align: left; font: inherit; color: inherit; background: none; border: 0; border-top: 1px solid var(--line);
+  cursor: pointer; grid-template-columns: 56px minmax(0, 1fr) auto; align-items: center; gap: 4px 20px;
+}
+button.cert:first-child { border-top: 0; padding-top: 0; }
+button.cert img { width: 56px; height: 79px; object-fit: cover; object-position: top; outline: 1px solid var(--line); display: block; }
+button.cert .t { min-width: 0; display: grid; gap: 2px; }
+button.cert .t small { font-family: var(--font-mono); font-size: 12.5px; color: var(--muted); font-weight: 400; }
+button.cert .open { font-family: var(--font-mono); font-size: 12.5px; color: var(--accent); white-space: nowrap; }
+button.cert:hover b { color: var(--accent); }
+
+/* Viewer */
+.viewer { position: fixed; inset: 0; z-index: 50; display: grid; grid-template-rows: auto minmax(0, 1fr); background: rgba(8, 14, 19, .88);
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); gap: 12px; }
+.viewer-bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; color: #E3E9EE; font-family: var(--font-mono); font-size: 13px; }
+.viewer-bar p { margin: 0; min-width: 0; }
+.viewer-bar button { font: inherit; cursor: pointer; background: #E3E9EE; color: #0E151B; border: 0; padding: 8px 14px; }
+.viewer-stage { min-height: 0; display: grid; place-items: center; overflow: auto; }
+.viewer-stage img { max-width: 100%; max-height: 100%; width: auto; height: auto; display: block; }
+
+footer { padding-block: 28px 40px; font-family: var(--font-mono); font-size: 13px; color: var(--muted); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+@media (max-width: 760px) {
+  section { grid-template-columns: minmax(0, 1fr); padding-block: 36px; }
+  section > h2 { margin: 0; }
+  .row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .cert { grid-template-columns: minmax(0, 1fr); }
+  .hero { padding-block: 40px 28px; grid-template-columns: minmax(0, 1fr); }
+  .portrait { order: -1; justify-self: start; max-width: 220px; }
+  button.cert { grid-template-columns: 48px minmax(0, 1fr); }
+  button.cert img { width: 48px; height: 68px; }
+  button.cert .open { grid-column: 2; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ghost, .top a, button.copy { transition: color .15s, border-color .15s; }
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <nav aria-label="Sections">
+      <a href="#stack">Stack</a>
+      <a href="#experience">Experience</a>
+      <a href="#lab">Home lab</a>
+      <a href="#certifications">Certifications</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">Kathmandu, Nepal &middot; 4 years in production</p>
+      <h1>Utsab Upreti</h1>
+      <p class="role">System Administrator</p>
+      <p class="lede">I run the servers, identities and endpoint security behind banks and financial institutions in Nepal. Windows Server and Linux are the base, with Active Directory, CrowdStrike Falcon and Ansible on top, all kept in line with Nepal Rastra Bank IT governance.</p>
+      <div class="cta">
+        <span class="mail"><span id="mail-text">info@utsabupreti.com.np</span><button class="copy" id="copy-btn" type="button">Copy</button></span>
+        <a class="ghost" href="https://linkedin.com/in/utsab-upreti-1401a81b1">LinkedIn</a>
+      </div>
+    </div>
+    <figure class="portrait"><img src="img/utsab.jpg" width="720" height="900" alt="Portrait of Utsab Upreti"></figure>
+  </div>
+
+  <div class="scale" aria-label="Environment scale">
+    <div><b>4,500+</b><span>endpoints per Falcon deployment</span></div>
+    <div><b>200&ndash;300+</b><span>servers per banking client</span></div>
+    <div><b>2,500+</b><span>Windows endpoints on WinRM</span></div>
+    <div><b>5</b><span>banking clients on Falcon</span></div>
+  </div>
+
+  <section id="about">
+    <h2>About</h2>
+    <div>
+      <p>Most of my work is the unglamorous part of infrastructure that has to keep working: accounts that need the right access, servers that must come back after a reboot, certificates that must not expire, and endpoints that must report in.</p>
+      <p>I administer ManageEngine AD360, Key Manager Plus and Motadata ServiceOps for 4 to 5 enterprise clients, and CrowdStrike Falcon for 5 banks. I take a client engagement from requirements through deployment, configuration and documentation, and I test every change in my own lab first.</p>
+    </div>
+  </section>
+
+  <section id="stack">
+    <h2>Stack</h2>
+    <div class="stack">
+      <div class="row"><span class="area">Servers</span><div class="tools">Windows Server, RHEL 9, Ubuntu<small>systemd service management, SELinux, dependency troubleshooting</small></div><span class="pill prod">In production</span></div>
+      <div class="row"><span class="area">Identity</span><div class="tools">Active Directory, ManageEngine AD360<small>User and computer accounts, Group Policy, LDAPS</small></div><span class="pill prod">In production</span></div>
+      <div class="row"><span class="area">Endpoint security</span><div class="tools">CrowdStrike Falcon<small>Sensor rollout, policy tuning, exclusions, detections triage, Real Time Response, DLP, MDM</small></div><span class="pill prod">In production</span></div>
+      <div class="row"><span class="area">Automation</span><div class="tools">Ansible<small>Playbooks for Linux application deployment, service restarts, routine configuration</small></div><span class="pill prod">In production</span></div>
+      <div class="row"><span class="area">ITSM and certificates</span><div class="tools">Motadata ServiceOps, ManageEngine Key Manager Plus<small>SSL/TLS lifecycle, CRL and LDAP validation, CA imports into the Java truststore</small></div><span class="pill prod">In production</span></div>
+      <div class="row"><span class="area">Patch and remote</span><div class="tools">PDQ Inventory and Deploy, WinRM, Splashtop Gateway</div><span class="pill prod">In production</span></div>
+      <div class="row"><span class="area">Mail and DNS</span><div class="tools">Microsoft 365 and Exchange, Axigen, Zoho Mail, DNS, DHCP<small>MX, SPF and DKIM through Cloudflare</small></div><span class="pill prod">In production</span></div>
+      <div class="row"><span class="area">Virtualization</span><div class="tools">KVM and virt-manager on Fedora</div><span class="pill lab">Home lab</span></div>
+      <div class="row"><span class="area">Scripting and cloud</span><div class="tools">PowerShell, Azure and Entra ID fundamentals</div><span class="pill learn">Learning</span></div>
+    </div>
+  </section>
+
+  <section id="experience">
+    <h2>Experience</h2>
+    <div>
+      <h3>System Administrator</h3>
+      <p class="meta">Raechal Enterprises Pvt. Ltd. &middot; Kathmandu &middot; Oct 2022 to present</p>
+      <ul class="plain">
+        <li>Administer CrowdStrike Falcon EDR for 5 banking clients, each with 4,500+ endpoints and 200&ndash;300+ servers, including sensor rollout, policy tuning, exclusions, detections triage and RTR remediation.</li>
+        <li>Run Falcon DLP and mobile device management across banking environments: policy setup, rollout and monitoring.</li>
+        <li>Deploy and support ManageEngine AD360, Key Manager Plus and Motadata ServiceOps for 4 to 5 enterprise clients, aligned with NRB IT governance.</li>
+        <li>Automate Linux deployments with Ansible across RHEL 9 and Ubuntu servers.</li>
+        <li>Administer Microsoft 365, Exchange and Axigen mail for enterprise clients.</li>
+        <li>Keep technical documentation and support reports for clients and internal teams, and coordinate with vendors on issue resolution.</li>
+      </ul>
+
+      <h3 style="margin-top:44px">Selected work</h3>
+      <div class="work" style="margin-top:20px">
+        <div><h4>Identity</h4><p>Deployed and configured ManageEngine AD360 for client environments, covering identity administration, account management and access governance.</p></div>
+        <div><h4>Service desk</h4><p>Installed Motadata ServiceOps on RHEL 9 and Ubuntu with LDAPS integration and CA certificate imports for secure authentication.</p></div>
+        <div><h4>Certificates</h4><p>Deployed Key Manager Plus as a hardened systemd service on RHEL 9 for enterprise certificate lifecycle management.</p></div>
+        <div><h4>Patching</h4><p>Built a PDQ Deploy workflow for automated Windows 11 rollout, including TPM and Secure Boot bypass scripting for unsupported hardware.</p></div>
+        <div><h4>Remote administration</h4><p>Configured WinRM on 2,500+ Windows endpoints for Motadata monitoring and resolved a Splashtop Gateway issue that blocked remote support.</p></div>
+        <div><h4>Client POC</h4><p>Compared PDQ Inventory and Deploy with ManageEngine Endpoint Central on patch workflows and reporting depth, and presented Motadata asset management to a banking client.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="lab">
+    <h2>Home lab</h2>
+    <div>
+      <p>Changes get proven here before they reach a client, then documented.</p>
+      <div class="lab">
+        <p><b>Hypervisor.</b> Fedora host running KVM and virt-manager, bridged networking on <code>br0</code>, and a dedicated NVMe drive for VM disks. Spice USB redirection for a Windows 11 guest.</p>
+        <p><b>Active Directory.</b> Full domain: domain controller setup, GPO creation and testing, joining and managing computer accounts, DNS server and records, and LAPS for local administrator passwords.</p>
+        <p style="margin:0"><b>Testing.</b> PDQ Deploy TPM and Secure Boot bypass scripts run here first, outside production.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="certifications">
+    <h2>Certifications</h2>
+    <div class="certs">
+      <button class="cert" type="button" data-src="certs/falcon-administrator.jpg" data-title="Falcon Administrator learning plan, CrowdStrike University"><img src="certs/falcon-administrator.jpg" alt="" loading="lazy" width="1158" height="1638"><span class="t"><b>Falcon Administrator</b><small>CrowdStrike University &middot; Aug 2026 &middot; learning plan</small></span><span class="open">View certificate</span></button>
+      <button class="cert" type="button" data-src="certs/manageengine-iam.jpg" data-title="Certified Pre-Sales Consultant for IAM (Intermediate), ManageEngine"><img src="certs/manageengine-iam.jpg" alt="" loading="lazy" width="1157" height="1638"><span class="t"><b>Certified Pre-Sales Consultant for IAM</b><small>ManageEngine &middot; Intermediate &middot; Jul 2026</small></span><span class="open">View certificate</span></button>
+      <button class="cert" type="button" data-src="certs/falcon-dsec-190.jpg" data-title="DSEC 190: Falcon Endpoint Data Protection Fundamentals, CrowdStrike University"><img src="certs/falcon-dsec-190.jpg" alt="" loading="lazy" width="1158" height="1638"><span class="t"><b>DSEC 190: Falcon Endpoint Data Protection Fundamentals</b><small>CrowdStrike University &middot; Oct 2026</small></span><span class="open">View certificate</span></button>
+      <button class="cert" type="button" data-src="certs/falcon-160-mobile.jpg" data-title="FALCON 160: Falcon for Mobile, CrowdStrike University"><img src="certs/falcon-160-mobile.jpg" alt="" loading="lazy" width="1158" height="1638"><span class="t"><b>FALCON 160: Falcon for Mobile</b><small>CrowdStrike University &middot; Aug 2026</small></span><span class="open">View certificate</span></button>
+    </div>
+  </section>
+
+  <section id="education">
+    <h2>Education</h2>
+    <div class="certs">
+      <div class="cert"><b>Bachelor in Business Administration, Nobel College</b><span>2019 &ndash; 2024</span></div>
+      <div class="cert"><b>Grade XII, Computer Science, Golden Gate International College</b><span>2016 &ndash; 2018</span></div>
+    </div>
+  </section>
+
+  <section id="contact" style="border-bottom:0">
+    <h2>Contact</h2>
+    <div>
+      <p>Open to system administrator and infrastructure roles, and glad to talk with other people who run servers, identity and endpoint security.</p>
+      <p class="mono">info@utsabupreti.com.np<br>Kathmandu, Nepal</p>
+      <p><a href="https://linkedin.com/in/utsab-upreti-1401a81b1">linkedin.com/in/utsab-upreti-1401a81b1</a></p>
+    </div>
+  </section>
+
+  <footer><span>Utsab Upreti &middot; System Administrator</span><span>utsabupreti.com.np</span></footer>
+</div>
+
+<div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-labelledby="viewer-title" hidden>
+  <div class="viewer-bar">
+    <p id="viewer-title"></p>
+    <button type="button" id="viewer-close">Close</button>
+  </div>
+  <div class="viewer-stage"><img id="viewer-img" alt=""></div>
+</div>
+
+<script>
+(function () {
+  var btn = document.getElementById('copy-btn');
+  var txt = document.getElementById('mail-text');
+  btn.addEventListener('click', function () {
+    var done = function () { btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = 'Copy'; }, 1600); };
+    var fallback = function () {
+      var r = document.createRange(); r.selectNodeContents(txt);
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      btn.textContent = 'Selected';
+    };
+    try {
+      navigator.clipboard.writeText(txt.textContent).then(done, fallback);
+    } catch (e) { fallback(); }
+  });
+
+  /* Certificate viewer */
+  var viewer = document.getElementById('viewer');
+  var vImg = document.getElementById('viewer-img');
+  var vTitle = document.getElementById('viewer-title');
+  var vClose = document.getElementById('viewer-close');
+  var lastBtn = null;
+
+  function openViewer(btn) {
+    lastBtn = btn;
+    vImg.src = btn.getAttribute('data-src');
+    vImg.alt = btn.getAttribute('data-title');
+    vTitle.textContent = btn.getAttribute('data-title');
+    viewer.hidden = false;
+    vClose.focus();
+  }
+  function closeViewer() {
+    viewer.hidden = true;
+    vImg.removeAttribute('src');
+    if (lastBtn) lastBtn.focus();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('button.cert'), function (b) {
+    b.addEventListener('click', function () { openViewer(b); });
+  });
+  vClose.addEventListener('click', closeViewer);
+  viewer.addEventListener('click', function (e) {
+    if (e.target === viewer || e.target.classList.contains('viewer-stage')) closeViewer();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !viewer.hidden) closeViewer();
+  });
+})();
+</script>
+
+</body></html>
